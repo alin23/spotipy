@@ -24,7 +24,7 @@ from sendgrid.helpers.mail import (
     Personalization
 )
 
-from .constants import API, Scope, AuthFlow, AudioFeature
+from .constants import API, AuthFlow, AudioFeature
 from .exceptions import (
     SpotifyException,
     SpotifyCredentialsException,
@@ -35,26 +35,10 @@ daiquiri.setup(outputs=(
     daiquiri.output.STDERR,
     daiquiri.output.File(directory="/tmp"),
 ), level=logging.INFO)
+daiquiri.set_default_log_levels([('spotipy', logging.INFO)])
 logger = daiquiri.getLogger('spotipy')
 
 ''' A simple and thin Python library for the Spotify Web API'''
-
-
-class SpotifyCallbackRequestHandler(BaseHTTPRequestHandler):
-    def __init__(self, client=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.client = client
-
-    def do_GET(self):
-        try:
-            self.client.token = self.client.oauth_session.fetch_token(
-                token_url=API.TOKEN.value,
-                client_id=self.client.client_id,
-                client_secret=self.client.client_secret,
-                authorization_response=self.path)
-            self.wfile.write(b'Succesfully logged in')
-        except:
-            self.wfile.write(b'Couldn\'t get authorization code')
 
 
 class Spotify:
@@ -149,7 +133,10 @@ class Spotify:
         if self.cache_path.exists():
             content = self.cache_path.read_text()
             if content:
-                token = json.loads(content)
+                try:
+                    token = json.loads(content)
+                except:
+                    pass
 
         return token
 
@@ -160,23 +147,47 @@ class Spotify:
         if force:
             token = {}
 
+        if not force:
+            token = self.get_cached_token()
+            if token:
+                self.oauth_session.token = token
+                self.token = token
+                return token
+
         if isinstance(self.oauth_session._client, BackendApplicationClient):
             self.token = self.oauth_session.fetch_token(
                 token_url=API.TOKEN.value,
                 client_id=self.client_id,
                 client_secret=self.client_secret)
+            self.cache_token(self.token)
             return self.token
 
         if isinstance(self.oauth_session._client, WebApplicationClient):
-            if not force:
-                token = self.get_cached_token()
-                if token:
-                    self.oauth_session.token = token
-                    self.token = token
-                    return token
+            client = self
 
-            RequestHandlerClass = partial(SpotifyCallbackRequestHandler, client=self)
-            httpd = HTTPServer(('', self.port or 0), RequestHandlerClass)
+            class SpotifyCallbackRequestHandler(BaseHTTPRequestHandler):
+                def create_response(self, status, message):
+                    self.send_response(status)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(message)
+
+                def do_GET(self):
+                    sleep(0.5)
+                    try:
+                        token = client.oauth_session.fetch_token(
+                            token_url=API.TOKEN.value,
+                            client_id=client.client_id,
+                            client_secret=client.client_secret,
+                            authorization_response=self.path)
+                        client.token = token
+                        self.create_response(200, b'Successfully logged in!')
+                    except Exception:
+                        self.create_response(500, b'Could not get authorization token.')
+                        raise
+                    return
+
+            httpd = HTTPServer(('', self.port or 0), SpotifyCallbackRequestHandler)
             threading.Thread(target=httpd.serve_forever, daemon=True).start()
 
             authorization_url, _ = self.oauth_session.authorization_url(API.AUTHORIZE.value)
@@ -185,11 +196,14 @@ class Spotify:
             else:
                 logger.info(f'Login here: {authorization_url}')
 
+            self.token = {}
             logger.info('Waiting for authorization code...')
             while not self.token:
                 sleep(0.5)
 
-        return self.token
+            httpd.shutdown()
+            self.cache_token(self.token)
+            return self.token
 
     def cache_token(self, token):
         self.cache_path.write_text(json.dumps(token))
@@ -198,6 +212,9 @@ class Spotify:
         api_key = os.getenv('SENDGRID_API_KEY')
         sender = os.getenv('SENDGRID_SENDER')
         template_id = os.getenv('SENDGRID_TEMPLATE_ID')
+
+        logger.info(f'Login here: {auth_url}')
+        return
 
         if not (api_key and sender):
             if fallback:
@@ -784,7 +801,7 @@ class Spotify:
                   Valid-values: short_term, medium_term, long_term
         '''
         return self._get(
-            API.MY_TOP.value.format('artists'), time_range=time_range,
+            API.MY_TOP.value.format(type='artists'), time_range=time_range,
             limit=limit, offset=offset)
 
     def current_user_top_tracks(self, limit=20, offset=0, time_range='medium_term'):
@@ -797,7 +814,7 @@ class Spotify:
                   Valid-values: short_term, medium_term, long_term
         '''
         return self._get(
-            API.MY_TOP.value.format('tracks'), time_range=time_range,
+            API.MY_TOP.value.format(type='tracks'), time_range=time_range,
             limit=limit, offset=offset)
 
     def current_user_saved_albums_add(self, albums=[]):
