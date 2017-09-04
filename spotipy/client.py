@@ -200,10 +200,10 @@ class Spotify:
             logger.info('Waiting for authorization code...')
             while not self.token:
                 sleep(0.5)
-
-            httpd.shutdown()
-            self.cache_token(self.token)
-            return self.token
+            else:
+                httpd.shutdown()
+                self.cache_token(self.token)
+                return self.token
 
     def cache_token(self, token):
         self.cache_path.write_text(json.dumps(token))
@@ -212,9 +212,6 @@ class Spotify:
         api_key = os.getenv('SENDGRID_API_KEY')
         sender = os.getenv('SENDGRID_SENDER')
         template_id = os.getenv('SENDGRID_TEMPLATE_ID')
-
-        logger.info(f'Login here: {auth_url}')
-        return
 
         if not (api_key and sender):
             if fallback:
