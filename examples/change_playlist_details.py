@@ -20,8 +20,8 @@ if len(sys.argv) > 3:
         collaborative = sys.argv[5].lower() == 'true'
 
 else:
-    print ("Usage: %s username playlist_id name [public collaborative]" %
-           (sys.argv[0]))
+    print("Usage: %s username playlist_id name [public collaborative]" %
+          (sys.argv[0]))
     sys.exit()
 
 scope = 'playlist-modify-public playlist-modify-private'

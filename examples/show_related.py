@@ -22,4 +22,3 @@ try:
         print('  ', artist['name'])
 except:
     print("usage show_related.py [artist-name]")
-

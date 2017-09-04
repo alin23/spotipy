@@ -13,4 +13,3 @@ while results['next']:
 
 for album in albums:
     print((album['name']))
-

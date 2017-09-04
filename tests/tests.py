@@ -19,7 +19,6 @@ class TestSpotipy(unittest.TestCase):
     radiohead_urn = 'spotify:artist:4Z8W4fKeB5YxbusRsdQVPb'
     angeles_haydn_urn = 'spotify:album:1vAbqAeuJVWNAe7UR00bdM'
 
-
     bad_id = 'BAD_ID'
 
     def setUp(self):
@@ -41,20 +40,22 @@ class TestSpotipy(unittest.TestCase):
     def test_album_tracks(self):
         results = self.spotify.album_tracks(self.pinkerton_urn)
         self.assertTrue(len(results['items']) == 10)
-    
+
     def test_album_tracks_many(self):
         results = self.spotify.album_tracks(self.angeles_haydn_urn)
         tracks = results['items']
         total, received = results['total'], len(tracks)
         while received < total:
-            results = self.spotify.album_tracks(self.angeles_haydn_urn, offset=received)
+            results = self.spotify.album_tracks(
+                self.angeles_haydn_urn, offset=received)
             tracks.extend(results['items'])
             received = len(tracks)
 
         self.assertEqual(received, total)
 
     def test_albums(self):
-        results = self.spotify.albums([self.pinkerton_urn, self.pablo_honey_urn])
+        results = self.spotify.albums(
+            [self.pinkerton_urn, self.pablo_honey_urn])
         self.assertTrue('albums' in results)
         self.assertTrue(len(results['albums']) == 2)
 
@@ -128,12 +129,12 @@ class TestSpotipy(unittest.TestCase):
         except requests.ReadTimeout:
             self.assertTrue(True, 'expected search timeout')
 
-
     def test_album_search(self):
         results = self.spotify.search(q='weezer pinkerton', type='album')
         self.assertTrue('albums' in results)
         self.assertTrue(len(results['albums']['items']) > 0)
-        self.assertTrue(results['albums']['items'][0]['name'].find('Pinkerton') >= 0)
+        self.assertTrue(results['albums']['items'][0]
+                        ['name'].find('Pinkerton') >= 0)
 
     def test_track_search(self):
         results = self.spotify.search(q='el scorcho weezer', type='track')
@@ -161,23 +162,25 @@ class TestSpotipy(unittest.TestCase):
 
     def test_unauthenticated_post_fails(self):
         with self.assertRaises(SpotifyException) as cm:
-            self.spotify.user_playlist_create("spotify", "Best hits of the 90s")
+            self.spotify.user_playlist_create(
+                "spotify", "Best hits of the 90s")
         self.assertTrue(cm.exception.http_status == 401 or
-            cm.exception.http_status == 403)
+                        cm.exception.http_status == 403)
 
     def test_custom_requests_session(self):
         from requests import Session
         sess = Session()
         sess.headers["user-agent"] = "spotipy-test"
         with_custom_session = spotipy.Spotify(requests_session=sess)
-        self.assertTrue(with_custom_session.user(user="akx")["uri"] == "spotify:user:akx")
+        self.assertTrue(with_custom_session.user(
+            user="akx")["uri"] == "spotify:user:akx")
 
     def test_force_no_requests_session(self):
         from requests import Session
         with_no_session = spotipy.Spotify(requests_session=False)
         self.assertFalse(isinstance(with_no_session._session, Session))
-        self.assertTrue(with_no_session.user(user="akx")["uri"] == "spotify:user:akx")
-
+        self.assertTrue(with_no_session.user(user="akx")
+                        ["uri"] == "spotify:user:akx")
 
 
 '''

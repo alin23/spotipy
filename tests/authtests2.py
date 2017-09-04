@@ -1,7 +1,7 @@
 # -*- coding: latin-1 -*-
 
 import spotipy
-from  spotipy import util
+from spotipy import util
 import unittest
 import pprint
 import sys
@@ -16,26 +16,26 @@ from spotipy.oauth2 import SpotifyClientCredentials
     playlists in a relatively stable state.
 '''
 
+
 class AuthTestSpotipy(unittest.TestCase):
     '''
         These tests require user authentication
     '''
 
     playlist = "spotify:user:plamere:playlist:2oCEWyyAPbZp9xhVSxZavx"
-    four_tracks = ["spotify:track:6RtPijgfPKROxEzTHNRiDp", 
-                "spotify:track:7IHOIqZUUInxjVkko181PB",
-                "4VrWlk8IQxevMvERoX08iC", 
-                "http://open.spotify.com/track/3cySlItpiPiIAzU3NyHCJf"]
+    four_tracks = ["spotify:track:6RtPijgfPKROxEzTHNRiDp",
+                   "spotify:track:7IHOIqZUUInxjVkko181PB",
+                   "4VrWlk8IQxevMvERoX08iC",
+                   "http://open.spotify.com/track/3cySlItpiPiIAzU3NyHCJf"]
 
-    two_tracks = ["spotify:track:6RtPijgfPKROxEzTHNRiDp", 
-                "spotify:track:7IHOIqZUUInxjVkko181PB"]
+    two_tracks = ["spotify:track:6RtPijgfPKROxEzTHNRiDp",
+                  "spotify:track:7IHOIqZUUInxjVkko181PB"]
 
-    other_tracks=["spotify:track:2wySlB6vMzCbQrRnNGOYKa", 
-            "spotify:track:29xKs5BAHlmlX1u4gzQAbJ",
-            "spotify:track:1PB7gRWcvefzu7t3LJLUlf"]
+    other_tracks = ["spotify:track:2wySlB6vMzCbQrRnNGOYKa",
+                    "spotify:track:29xKs5BAHlmlX1u4gzQAbJ",
+                    "spotify:track:1PB7gRWcvefzu7t3LJLUlf"]
 
     bad_id = 'BAD_ID'
-
 
     def test_audio_analysis(self):
         result = spotify.audio_analysis(self.four_tracks[0])
@@ -59,12 +59,14 @@ class AuthTestSpotipy(unittest.TestCase):
         self.assertTrue(results[-1] == None)
 
     def test_recommendations(self):
-        results = spotify.recommendations(seed_tracks=self.four_tracks, min_danceability=0, max_loudness=0, target_popularity=50)
+        results = spotify.recommendations(
+            seed_tracks=self.four_tracks, min_danceability=0, max_loudness=0, target_popularity=50)
         self.assertTrue(len(results['tracks']) == 20)
 
 
 if __name__ == '__main__':
     client_credentials_manager = SpotifyClientCredentials()
-    spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+    spotify = spotipy.Spotify(
+        client_credentials_manager=client_credentials_manager)
     spotify.trace = False
     unittest.main()
