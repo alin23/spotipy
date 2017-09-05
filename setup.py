@@ -14,6 +14,7 @@ setup(
         'sendgrid',
         'requests_oauthlib',
         'oauthlib',
+        'first',
     ],
     license='LICENSE.txt',
     packages=['spotipy'])

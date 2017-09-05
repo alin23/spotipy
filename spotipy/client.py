@@ -8,9 +8,10 @@ import pathlib
 import threading
 from time import sleep
 from hashlib import sha256
-from functools import partial, partialmethod
+from functools import partialmethod
 
 import six
+import first
 import daiquiri
 import sendgrid
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -983,6 +984,31 @@ class Spotify:
         ''' Get a list of user's available devices.
         '''
         return self._get(API.DEVICES.value)
+
+    def get_device(self, device_name=None, device_id=None, field='id'):
+        '''Get Spotify device based on name
+
+        :param str, optional device_name: device name
+        :param str, optional device_id: device ID
+        :param str, optional field: device attribute to return
+
+        str or dict: Spotify device
+        '''
+
+        device_name = device_name
+
+        devices = self.devices()['devices']
+        device = first(devices, key=lambda d: d['name'] == device_name or d['id'] == device_id)
+        if not device:
+            device_names = ', '.join([d['name'] for d in devices])
+            raise ValueError(f'''
+                Device {device_name or device_id} doesn't exist
+                Possible devices: {device_names}''')
+
+        if field:
+            return device[field]
+        else:
+            return device
 
     def current_playback(self, market=None):
         ''' Get information about user's current playback.
