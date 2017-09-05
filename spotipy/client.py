@@ -249,7 +249,7 @@ class Spotify:
             timeout=self.requests_timeout,
             headers={'Content-Type': 'application/json'},
             data=json.dumps(payload),
-            params={k: v for k, v in params.items() if v},
+            params={k: v for k, v in params.items() if v is not None},
             client_id=self.client_id,
             client_secret=self.client_secret,
         )
