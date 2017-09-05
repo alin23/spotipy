@@ -8,12 +8,14 @@ import pathlib
 import threading
 from time import sleep
 from hashlib import sha256
+from operator import attrgetter
 from functools import partialmethod
 
 import six
-import first
+import dotmap
 import daiquiri
 import sendgrid
+from first import first
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from oauthlib.oauth2 import WebApplicationClient, BackendApplicationClient
 from requests_oauthlib import OAuth2Session
@@ -279,7 +281,7 @@ class Spotify:
         if r.text and len(r.text) > 0 and r.text != 'null':
             results = r.json()
             logger.debug(f'RESP: {results}')
-            return results
+            return dotmap.DotMap(results)
         else:
             return None
 
@@ -997,10 +999,14 @@ class Spotify:
 
         device_name = device_name
 
-        devices = self.devices()['devices']
-        device = first(devices, key=lambda d: d['name'] == device_name or d['id'] == device_id)
+        devices = self.devices().devices
+        if not (device_name or device_id):
+            device = first(devices, key=attrgetter('is_active'))
+        else:
+            device = first(devices, key=lambda d: d.name == device_name or d.id == device_id)
+
         if not device:
-            device_names = ', '.join([d['name'] for d in devices])
+            device_names = ', '.join([d.name for d in devices])
             raise ValueError(f'''
                 Device {device_name or device_id} doesn't exist
                 Possible devices: {device_names}''')
