@@ -985,7 +985,7 @@ class Spotify:
         '''
         return self._get(API.DEVICES.value)
 
-    def get_device(self, device_name=None, device_id=None, field='id'):
+    def get_device(self, device_name=None, device_id=None, field=None):
         '''Get Spotify device based on name
 
         :param str, optional device_name: device name
