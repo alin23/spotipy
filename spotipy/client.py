@@ -44,6 +44,16 @@ logger = daiquiri.getLogger('spotipy')
 ''' A simple and thin Python library for the Spotify Web API'''
 
 
+class SpotifyResult(dotmap.DotMap):
+    def __iter__(self):
+        if 'items' in self._map:
+            return iter(self._map['items'])
+        if 'seeds' in self._map:
+            if 'tracks' in self._map:
+                return iter(self._map['tracks'])
+        return self._map.__iter__()
+
+
 class Spotify:
     '''
         Example usage::
@@ -281,7 +291,7 @@ class Spotify:
         if r.text and len(r.text) > 0 and r.text != 'null':
             results = r.json()
             logger.debug(f'RESP: {results}')
-            return dotmap.DotMap(results)
+            return SpotifyResult(results)
         else:
             return None
 
