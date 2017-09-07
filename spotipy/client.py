@@ -34,12 +34,15 @@ from .exceptions import (
     SendGridCredentialsException
 )
 
+logdir = pathlib.Path.home().joinpath('.logs')
+if not logdir.exists():
+    logdir.mkdir(parents=True)
+
 daiquiri.setup(outputs=(
     daiquiri.output.STDERR,
-    daiquiri.output.File(directory="/tmp"),
+    daiquiri.output.File(directory=logdir)
 ), level=logging.INFO)
-daiquiri.set_default_log_levels([('spotipy', logging.INFO)])
-logger = daiquiri.getLogger('spotipy')
+logger = daiquiri.getLogger()
 
 ''' A simple and thin Python library for the Spotify Web API'''
 
