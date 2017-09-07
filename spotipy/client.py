@@ -12,7 +12,7 @@ from operator import attrgetter
 from functools import partialmethod
 
 import six
-import dotmap
+import addict
 import daiquiri
 import sendgrid
 from first import first
@@ -47,14 +47,14 @@ logger = daiquiri.getLogger()
 ''' A simple and thin Python library for the Spotify Web API'''
 
 
-class SpotifyResult(dotmap.DotMap):
+class SpotifyResult(addict.Dict):
     def __iter__(self):
-        if 'items' in self._map:
-            return iter(self._map['items'])
-        if 'seeds' in self._map:
-            if 'tracks' in self._map:
-                return iter(self._map['tracks'])
-        return self._map.__iter__()
+        if 'items' in self:
+            return iter(self['items'])
+        if 'seeds' in self:
+            if 'tracks' in self:
+                return iter(self['tracks'])
+        return super().__iter__()
 
 
 class Spotify:

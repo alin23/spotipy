@@ -15,7 +15,7 @@ setup(
         'requests_oauthlib',
         'oauthlib',
         'first',
-        'dotmap',
+        'addict',
     ],
     license='LICENSE.txt',
     packages=['spotipy'])
