@@ -112,7 +112,7 @@ class Spotify:
         self.oauth_session = self._get_session(flow)
         self.proxies = proxies
         self.requests_timeout = requests_timeout
-        self.token = token or self.authenticate()
+        self._token = token
 
     def _get_redirect_uri(self, redirect_uri, port):
         redirect_uri = (
@@ -167,16 +167,16 @@ class Spotify:
             token = self.get_cached_token()
             if token:
                 self.oauth_session.token = token
-                self.token = token
-                return token
+                self._token = token
+                return self._token
 
         if isinstance(self.oauth_session._client, BackendApplicationClient):
-            self.token = self.oauth_session.fetch_token(
+            self._token = self.oauth_session.fetch_token(
                 token_url=API.TOKEN.value,
                 client_id=self.client_id,
                 client_secret=self.client_secret)
-            self.cache_token(self.token)
-            return self.token
+            self.cache_token(self._token)
+            return self._token
 
         if isinstance(self.oauth_session._client, WebApplicationClient):
             client = self
@@ -212,14 +212,14 @@ class Spotify:
             else:
                 logger.info(f'Login here: {authorization_url}')
 
-            self.token = {}
+            self._token = {}
             logger.info('Waiting for authorization code...')
-            while not self.token:
+            while not self._token:
                 sleep(0.5)
             else:
                 httpd.shutdown()
-                self.cache_token(self.token)
-                return self.token
+                self.cache_token(self._token)
+                return self._token
 
     def cache_token(self, token):
         self.cache_path.write_text(json.dumps(token))
@@ -255,6 +255,9 @@ class Spotify:
         sg.client.mail.send.post(request_body=mail.get())
 
     def _internal_call(self, method, url, payload, params):
+        if not self._token:
+            self.authenticate()
+
         if not url.startswith('http'):
             url = API.PREFIX.value + url
 
