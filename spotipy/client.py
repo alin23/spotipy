@@ -13,7 +13,6 @@ from functools import partialmethod
 import six
 import addict
 import sendgrid
-from log import get_logger
 from first import first
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from oauthlib.oauth2 import WebApplicationClient, BackendApplicationClient
@@ -26,6 +25,7 @@ from sendgrid.helpers.mail import (
     Personalization
 )
 
+from .log import get_logger
 from .constants import API, AuthFlow, AudioFeature
 from .exceptions import (
     SpotifyException,
