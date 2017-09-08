@@ -3,7 +3,6 @@ import os
 import json
 import time
 import socket
-import logging
 import pathlib
 import threading
 from time import sleep
@@ -13,8 +12,8 @@ from functools import partialmethod
 
 import six
 import addict
-import daiquiri
 import sendgrid
+from log import get_logger
 from first import first
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from oauthlib.oauth2 import WebApplicationClient, BackendApplicationClient
@@ -34,16 +33,7 @@ from .exceptions import (
     SendGridCredentialsException
 )
 
-logdir = pathlib.Path.home().joinpath('.logs')
-if not logdir.exists():
-    logdir.mkdir(parents=True)
-
-daiquiri.setup(outputs=(
-    daiquiri.output.STDERR,
-    daiquiri.output.File(directory=logdir)
-), level=logging.INFO)
-logger = daiquiri.getLogger()
-
+logger = get_logger()
 ''' A simple and thin Python library for the Spotify Web API'''
 
 
@@ -76,7 +66,7 @@ class Spotify:
     MAX_RETRIES = 10
 
     def __init__(self, token=None, username=None, email=None, cache_path=None,
-                 proxies=None, requests_timeout=None, debug=False, flow=AuthFlow.CLIENT_CREDENTIALS,
+                 proxies=None, requests_timeout=None, flow=AuthFlow.CLIENT_CREDENTIALS,
                  scope=None, client_id=None, client_secret=None, redirect_uri=None, port=None):
         '''
         Create a Spotify API object.
@@ -95,9 +85,6 @@ class Spotify:
         :param redirect_uri: Spotify Application Redirect URI
         :param port: Callback listening port
         '''
-        if debug:
-            logger.setLevel(logging.DEBUG)
-
         self.scope = scope
         self.email = email
         self.username = username
